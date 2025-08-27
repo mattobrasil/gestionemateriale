@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Analisi Device", layout="wide")
 
-st.title("Analisi Rapida Device")
+st.title("📊 Analisi Device")
 
-# --- Caricamento file Excel ---
+# Caricamento file Excel
 uploaded_file = st.file_uploader("Carica il file Excel", type=["xlsx", "xls"])
 
 if uploaded_file:
@@ -93,29 +93,30 @@ if uploaded_file:
     df['Area'] = df['City'].map(mappa_aree)
     
     
+    # Filtro Aree
+    area_options = sorted(df["Area"].dropna().unique().tolist())
+    selected_area = st.sidebar.multiselect("Area", area_options)
+    if selected_area:
+        df = df[df["Area"].isin(selected_area)]
+    
     # Filtro Device
-    device_options = df["Device"].dropna().unique().tolist()
-    selected_device = st.sidebar.multiselect("Device_code", device_options)
+    device_options = sorted(df["Device"].dropna().unique().tolist())
+    selected_device = st.sidebar.multiselect("Device", device_options)
     if selected_device:
         df = df[df["Device"].isin(selected_device)]
 
     # Filtro Seriali
-    serial_options = df["Batch"].dropna().unique().tolist()
+    serial_options = sorted(df["Batch"].dropna().unique().tolist())
     selected_serial = st.sidebar.multiselect("Seriale", serial_options)
     if selected_serial:
         df = df[df["Batch"].isin(selected_serial)]
 
     # Filtro Nome persona
-    name_options = df["Name"].dropna().unique().tolist()
+    name_options = sorted(df["Name"].dropna().unique().tolist())
     selected_name = st.sidebar.multiselect("Nome", name_options)
     if selected_name:
         df = df[df["Name"].isin(selected_name)]
         
-    # Filtro Aree
-    area_options = df["Area"].dropna().unique().tolist()
-    selected_area = st.sidebar.multiselect("Area", area_options)
-    if selected_area:
-        df = df[df["Area"].isin(selected_area)]
         
     # Filtro Short (scadenza < 120gg)
     if "Expiration" in df.columns:
@@ -125,8 +126,10 @@ if uploaded_file:
         filtro_short = st.toggle("Mostra device short", value=False)
         if filtro_short:
             df = df[(df["Expiration"] >= today) & (df["Expiration"] < short)]
-            
+    
+    # Cancello la colonna City e ordino il tutto per data di scadenza di default
     df = df.drop(columns=["City"])
+    df = df.sort_values(by='Expiration', ascending=True)
 
     # Mostra tabella
     st.subheader("Tabella filtrata")
@@ -142,7 +145,7 @@ if uploaded_file:
         return processed_data
 
     st.download_button(
-        label="Scarica Excel filtrato",
+        label="💾 Scarica Excel filtrato",
         data=to_excel(df),
         file_name="Materiale_filtrato.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
