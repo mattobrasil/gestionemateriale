@@ -5,7 +5,7 @@ from modules import carica_excel, rinomina_nomi_lunghi, aggiungi_area,filtra_sca
 
 st.set_page_config(page_title="Analisi Device", layout="centered")
 
-st.title("📊 Analisi Device")
+st.title("📊 Analisi Device 2.0")
 
 uploaded_file = st.file_uploader("Carica il file Excel", type=["xlsx", "xls"])
 if uploaded_file:
