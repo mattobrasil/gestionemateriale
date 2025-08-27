@@ -86,7 +86,7 @@ if uploaded_file:
     device_grafico = st.sidebar.multiselect(
         "Seleziona i Device per il grafico",
         options=sorted(df['Device'].unique()),
-        default=sorted(df["Device"].unique())
+        default=[]
     
     )
     normalizza_toggle = st.sidebar.toggle("Normalizza per numero di persone per Area", value=False)
