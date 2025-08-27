@@ -139,13 +139,17 @@ if uploaded_file:
     
     # Toggle nella sidebar
     mostra_batch = st.sidebar.toggle("Mostra colonna Batch", value=False)
+    mostra_aree = st.sidebar.toggle("Mostra colonna Aree", value=False)
     mostra_units = st.sidebar.toggle("Mostra colonna Units", value=False)
+    
     
     # Colonne da mostrare in tabella
     colonne_da_mostrare = df.columns.tolist()
 
     if not mostra_batch and 'Batch' in colonne_da_mostrare:
         colonne_da_mostrare.remove('Batch')
+    if not mostra_aree and 'Area' in colonne_da_mostrare:
+        colonne_da_mostrare.remove('Area')
     if not mostra_units and 'Units' in colonne_da_mostrare:
         colonne_da_mostrare.remove('Units')
         
