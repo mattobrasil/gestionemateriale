@@ -3,7 +3,7 @@ import pandas as pd
 from io import BytesIO
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Analisi Device", layout="wide")
+st.set_page_config(page_title="Analisi Device", layout="centered")
 
 st.title("📊 Analisi Device")
 
@@ -22,7 +22,7 @@ if uploaded_file:
         "Material Hier 5 Number",
         "Batch Num",
         "Expiration Date",
-        "Legal Status",
+        #"Legal Status",
         "Weeks"
     ]
     df = df[colonne_da_tenere]        
@@ -31,14 +31,20 @@ if uploaded_file:
     st.sidebar.header("🔎 Filtri")
     
     # Rinomino le colonne per renderle più leggibili
-    df = df.rename(columns={'Stock-Customer Name':'Name', 'Stock-Customer City':'City', 'Total Invntry Units':'Units', 'Material Hier 5 Number':'Device', 'Batch Num':'Batch', 'Expiration Date': 'Expiration'})
+    df = df.rename(columns={
+        'Stock-Customer Name':'Name', 
+        'Stock-Customer City':'City', 
+        'Total Invntry Units':'Units', 
+        'Material Hier 5 Number':'Device', 
+        'Batch Num':'Batch', 
+        'Expiration Date': 'Expiration'
+    })
     
     # Expiration Date da stringa a data in formato gg/mm/aaaa e cancello quelle prima di OGGI
     if "Expiration" in df.columns:
         df["Expiration"] = pd.to_datetime(df["Expiration"], errors="coerce")
         today = pd.Timestamp(datetime.today().date())
         df = df[df['Expiration'] >= today]
-        df.style.format({"Expiration": lambda t: t.strftime("%d/%m/%Y")})
     
     # Creo una colonna dedicata all'area
     df.insert(0, 'Area', '')
@@ -126,14 +132,37 @@ if uploaded_file:
         filtro_short = st.toggle("Mostra device short", value=False)
         if filtro_short:
             df = df[(df["Expiration"] >= today) & (df["Expiration"] < short)]
-    
+            
     # Cancello la colonna City e ordino il tutto per data di scadenza di default
     df = df.drop(columns=["City"])
     df = df.sort_values(by='Expiration', ascending=True)
+    
+    # Toggle nella sidebar
+    mostra_batch = st.sidebar.toggle("Mostra colonna Batch", value=False)
+    mostra_units = st.sidebar.toggle("Mostra colonna Units", value=False)
+    
+    # Colonne da mostrare in tabella
+    colonne_da_mostrare = df.columns.tolist()
 
+    if not mostra_batch and 'Batch' in colonne_da_mostrare:
+        colonne_da_mostrare.remove('Batch')
+    if not mostra_units and 'Units' in colonne_da_mostrare:
+        colonne_da_mostrare.remove('Units')
+        
+    # Dataframe solo per visualizzazione
+    df_vis = df[colonne_da_mostrare].copy()  
+    
     # Mostra tabella
     st.subheader("Tabella filtrata")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.data_editor(
+        df_vis,
+        column_config={
+            "Expiration": st.column_config.DateColumn("Expiration", format="DD/MM/YYYY"),
+            "Area": st.column_config.NumberColumn("Area", format="%d")
+        },
+        hide_index=True,
+        use_container_width=True
+    )
     
 
     # Pulsante per scaricare Excel
