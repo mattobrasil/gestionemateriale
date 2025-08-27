@@ -1,5 +1,7 @@
 # modules.py
 import pandas as pd
+import streamlit as st
+import plotly.express as px
 from datetime import datetime, timedelta
 from io import BytesIO
 
@@ -107,10 +109,67 @@ def filtra_short(df, giorni_short=None):
     return df
 
 def esporta_excel(df):
+    
     """Esporta DataFrame in Excel"""
     output = BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         df.to_excel(writer, index=False)
     return output.getvalue()
-
-
+    
+def grafico_device_per_area(df, device_selezionati=None, normalizza=False):
+    """
+    Crea un bar plot della distribuzione dei device per Area.
+    
+    Parametri:
+    - df: DataFrame filtrato con colonne 'Area', 'Device', 'Name'
+    - device_selezionati: lista di device da includere (default tutti)
+    - normalizza: booleano, se True normalizza per numero di persone per Area
+    """
+    
+    if device_selezionati is None:
+        device_selezionati = df["Device"].unique()
+    
+    # Filtra per device selezionati
+    df_grafico = df[df["Device"].isin(device_selezionati)].copy()
+    
+    # Assicura che le Aree siano interi
+    df_grafico["Area"] = df_grafico["Area"].astype(int)
+    
+    if df_grafico.empty:
+        st.info("Seleziona almeno un Device per visualizzare il grafico")
+        return
+    
+    if normalizza:
+        # Conteggio e normalizzazione per numero di persone per Area
+        counts = df_grafico.groupby(["Area", "Device"]).size().reset_index(name="Count")
+        persone_per_area = df_grafico.groupby("Area")["Name"].nunique().reset_index(name="NumPeople")
+        counts = counts.merge(persone_per_area, on="Area")
+        counts["CountNormalized"] = counts["Count"] / counts["NumPeople"]
+        
+        fig = px.bar(
+            counts,
+            x="Area",
+            y="CountNormalized",
+            color="Device",
+            barmode="group",
+            title="Numero Device per Area (Normalizzato per persone)",
+            labels={"CountNormalized": "Device per persona", "Area": "Area"}
+        )
+        
+    else:
+        counts = df_grafico.groupby(["Area", "Device"]).size().reset_index(name="Count")
+        fig = px.bar(
+            counts,
+            x="Area",
+            y="Count",
+            color="Device",
+            barmode="group",
+            title="Numero di Device per Area",
+            labels={"Count": "Numero dispositivi", "Area": "Area"}
+        )
+    
+    # Ordina le Aree
+    fig.update_xaxes(type='category', categoryorder='array', categoryarray=sorted(df_grafico["Area"].unique()))
+    fig.update_layout(xaxis_title="Area", yaxis_title="Conteggio")
+    
+    st.plotly_chart(fig, use_container_width=True)

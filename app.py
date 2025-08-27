@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from modules import carica_excel, rinomina_nomi_lunghi, aggiungi_area,filtra_scaduti, filtra_short, esporta_excel
+import plotly.express as px
+from modules import carica_excel, rinomina_nomi_lunghi, aggiungi_area,filtra_scaduti, filtra_short, esporta_excel, grafico_device_per_area
 
 st.set_page_config(page_title="Analisi Device", layout="centered")
 
@@ -77,4 +78,18 @@ if uploaded_file:
         data=esporta_excel(df),
         file_name="Materiale_filtrato.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
     )
+    
+    st.subheader("Distribuzione device per Area")
+    
+    device_grafico = st.sidebar.multiselect(
+        "Seleziona i Device per il grafico",
+        options=sorted(df['Device'].unique()),
+        default=sorted(df["Device"].unique())
+    
+    )
+    normalizza_toggle = st.sidebar.toggle("Normalizza per numero di persone per Area", value=False)
+    
+    grafico_device_per_area(df, device_selezionati=device_grafico, normalizza=normalizza_toggle)
+    
