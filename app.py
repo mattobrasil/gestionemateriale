@@ -40,6 +40,18 @@ if uploaded_file:
         'Expiration Date': 'Expiration'
     })
     
+    # Rinomino alcuni nomi lunghi
+    df['Name'] = df['Name'].replace({
+        'DE MICHELE DANILO - DHL POINT': 'DANILO DE MICHELE',
+        'FERMO DHL - FEDERICA BALDAN': 'FEDERICA BALDAN',
+        'FRANCESCA FRANCESE - FERMO DHL': 'FRANCESCA FRANCESE',
+        'INNOVABEAT-UMBERTO RIVA': 'UMBERTO RIVA',
+        'LEONARDO PERON - FERMO DHL': 'LEONARDO PERON',
+        'LUCA PALLOTTA - FERMO DHL': 'LUCA PALLOTTA',
+        'MEDISI-LUCA ARIOTA': 'LUCA ARIOTA',
+        'PIERGUIDI-GIULIA LUSINI': 'GIULIA LUSINI',    
+    })
+    
     # Expiration Date da stringa a data in formato gg/mm/aaaa e cancello quelle prima di OGGI
     if "Expiration" in df.columns:
         df["Expiration"] = pd.to_datetime(df["Expiration"], errors="coerce")
