@@ -1,25 +1,105 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from modules import carica_excel, rinomina_nomi_lunghi, aggiungi_area,filtra_scaduti, filtra_short, esporta_excel, grafico_device_per_area, carica_indirizzi
+from modules import carica_excel, rinomina_nomi_lunghi, aggiungi_area,filtra_scaduti, filtra_short, esporta_excel, grafico_device_per_area, carica_indirizzi, aggiungi_categorie_device
 
-st.set_page_config(page_title="Analisi Device", layout="centered")
+st.set_page_config(page_title="Analisi Device", layout="wide")
 
 st.title("📦 Hub Gestione TS")
 
-tab1, tab2, = st.tabs(["Analisi TS", "Indirizzi spedizione"])
+tab1, tab2, tab3 = st.tabs(["Analisi TS", "Indirizzi spedizione", "Grafici"])
+
+#Inizializzo il dataframe df
+
+df = None
+
+device_mapping = {
+    
+    "0662": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "0663": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "0665": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "0672": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "0673": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "0675": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "0676": {"Categoria": "Lead", "Famiglia": "Ty"},
+    "3501": {"Categoria": "Lead", "Famiglia": "S"},
+    "4457": {"Categoria": "Lead", "Famiglia": "By"},
+    "4480": {"Categoria": "Lead", "Famiglia": "By"},
+    "4592": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "4671": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "4672": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "4674": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "4675": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "4677": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "4678": {"Categoria": "Lead", "Famiglia": "CRT"},
+    "7732": {"Categoria": "Lead", "Famiglia": "By"},
+    "7736": {"Categoria": "Lead", "Famiglia": "By"},
+    "7841": {"Categoria": "Lead", "Famiglia": "By"},
+    "7842": {"Categoria": "Lead", "Famiglia": "By"},
+    
+    "4712": {"Categoria": "Tunnellizzatore", "Famiglia": "S"},
+    
+    "A219": {"Categoria": "Device", "Famiglia": "S", "Da sostituzione": "No"},
+    "D120": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "Si"},
+    "D121": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "Si"},
+    "D140": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D141": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "Si"},
+    "D142": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D143": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "Si"},
+    "D232": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D233": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D332": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D333": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D400": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "Si"},
+    "D401": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "Si"},
+    "D412": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D413": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D432": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    "D433": {"Categoria": "Device", "Famiglia": "Ty", "Da sostituzione": "No"},
+    
+    "G125": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G126": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G138": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G140": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G141": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G146": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G148": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "No"},
+    "G224": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G247": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "No"},
+    "G324": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G347": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "No"},
+    "G424": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "Si"},
+    "G447": {"Categoria": "Device", "Famiglia": "CRTd", "Da sostituzione": "No"},
+    
+    "L110": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L111": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L131": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L210": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L211": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L231": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L310": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    "L311": {"Categoria": "Device", "Famiglia": "PMK", "Da sostituzione": "No"},
+    
+    "U125": {"Categoria": "Device", "Famiglia": "CRTp", "Da sostituzione": "Si"},
+    "U128": {"Categoria": "Device", "Famiglia": "CRTp", "Da sostituzione": "No"},
+    "U225": {"Categoria": "Device", "Famiglia": "CRTp", "Da sostituzione": "Si"},
+    "U226": {"Categoria": "Device", "Famiglia": "CRTp", "Da sostituzione": "Si"},
+    "U228": {"Categoria": "Device", "Famiglia": "CRTp", "Da sostituzione": "No"},
+    }
 
 with tab1:
     
-    st.header("Analisi TS")
+    st.header("📑 Analisi TS")
     uploaded_file = st.file_uploader("Carica il file Excel", type=["xlsx", "xls"])
+    
     if uploaded_file:
         
         # Carico file Excel, rinomino alcuni nomi lunghi con Fermo DHL in mezzo, assegno a ogni città un'area
         
-        df = carica_excel(uploaded_file)
-        df = rinomina_nomi_lunghi(df)
+        df_raw = carica_excel(uploaded_file)
+        df = rinomina_nomi_lunghi(df_raw.copy())
         df = aggiungi_area(df)
+        df = aggiungi_categorie_device (df, device_mapping)
         
         # Aggiungo nella sidebar dei filtri per Area, per codice Device, per seriale, per Nome Persona, e toggle per gli short nella pagina principale
         
@@ -93,24 +173,12 @@ with tab1:
 
         )
         
-        # Grafico di distribuzione dei device per area e toggle per normalizzazione per numero di persone in area con quel device
         
-        st.subheader("Distribuzione device per Area")
-        
-        device_grafico = st.sidebar.multiselect(
-            "Seleziona i Device per il grafico",
-            options=sorted(df['Device'].unique()),
-            default=[]
-        
-        )
-        normalizza_toggle = st.sidebar.toggle("Normalizza per numero di persone per Area", value=False)
-        
-        grafico_device_per_area(df, device_selezionati=device_grafico, normalizza=normalizza_toggle)
         
 
 with tab2:
     
-    st.header("📍 Indirizzi di Spedizione")
+    st.header("🗺️ Indirizzi di Spedizione")
     
     indirizzi_df = carica_indirizzi()
     
@@ -142,3 +210,125 @@ with tab2:
         use_container_width=True,
         disabled=True  # solo visualizzazione
     )
+    
+with tab3:
+    
+    st.header("📊 Grafici")
+    
+    if uploaded_file:    
+
+        # Filtri centrali nel Tab3
+        col1, col2, col3 = st.columns(3)
+        
+        # filtro i NA dai valori univoci
+        devices = sorted(df["Device"].dropna().unique())
+        categories = sorted(df["Categoria"].dropna().unique())
+
+        with col1:
+            device_grafico = st.multiselect(
+                "Seleziona i Device",
+                options = devices, # uso la lista filtrata
+                default=[],  # vuoto all'apertura
+            )
+        with col2:
+            selected_categoria = st.multiselect(
+                "Categoria",
+                categories, # uso la lista filtrata
+                default=[],
+            )
+        
+        # Vede se il filtro Famiglia deve essere disabilitato
+        disable_famiglia = not selected_categoria
+        
+        df_filtered_for_dependencies = df.copy()
+        if selected_categoria:
+            df_filtered_for_dependencies = df_filtered_for_dependencies[df_filtered_for_dependencies["Categoria"].isin(selected_categoria)]
+            
+        famiglie = sorted(df_filtered_for_dependencies["Famiglia"].dropna().unique())
+        
+        with col3:
+            selected_famiglia = st.multiselect(
+                "Famiglia",
+                famiglie,
+                default=[],
+                disabled=disable_famiglia # Disabilita se non è stata scelta la Categoria
+            )
+        
+        # Toggle Device da sostituzione (pezzi rari, DF1, DF4-IS1)
+        selected_sostituzione = st.toggle(
+            "Device da sostituzione",
+            value=False
+        )
+
+        # Toggle normalizzazione
+        normalizza_toggle = st.toggle(
+            "Normalizza per numero di persone per Area", value=False
+        )
+
+        # Applica i filtri
+        df_grafico = df.copy()
+        if device_grafico:
+            df_grafico = df_grafico[df_grafico["Device"].isin(device_grafico)]
+        if selected_categoria:
+            df_grafico = df_grafico[df_grafico["Categoria"].isin(selected_categoria)]
+        if selected_famiglia:
+            df_grafico = df_grafico[df_grafico["Famiglia"].isin(selected_famiglia)]
+            
+        # Applica il filtro dei device Da Sostituzione
+        if selected_sostituzione:
+            df_grafico = df_grafico[df_grafico["Da sostituzione"] == "Si"]
+
+        # Crea il grafico solo se ci sono dati
+        if not df_grafico.empty:
+            import plotly.express as px
+            import plotly.graph_objects as go
+
+            if normalizza_toggle:
+                counts = (
+                    df_grafico.groupby(["Area", "Device"]).size().reset_index(name="Count")
+                )
+                persone_per_area = (
+                    df_grafico.groupby("Area")["Name"]
+                    .nunique()
+                    .reset_index(name="NumPeople")
+                )
+                counts = counts.merge(persone_per_area, on="Area")
+                counts["CountNormalized"] = counts["Count"] / counts["NumPeople"]
+
+                fig = px.bar(
+                    counts,
+                    x="Area",
+                    y="CountNormalized",
+                    color="Device",
+                    barmode="group",
+                    title="Numero Device per Area (Normalizzato per persone)",
+                    labels={"CountNormalized": "Device per persona", "Area": "Area"},
+                )
+
+            else:
+                counts = (
+                    df_grafico.groupby(["Area", "Device"]).size().reset_index(name="Count")
+                )
+                fig = px.bar(
+                    counts,
+                    x="Area",
+                    y="Count",
+                    color="Device",
+                    barmode="group",
+                    title="Numero di Device per Area",
+                    labels={"Count": "Numero dispositivi", "Area": "Area"},
+                )
+            
+            # Sull'asse delle x voglio solo vedere i numeri di area, non i decimali
+            x_labels = ['1', '2', '3', '4']
+            fig.update_xaxes(
+                tickvals=[1, 2, 3, 4], # These are the actual values from your data
+                ticktext=x_labels,     # These are the labels you want to display
+                type='category'        # Important to treat the x-axis as categories
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Seleziona almeno un filtro per visualizzare il grafico")
+    
+    else: st.info("⚠️ Carica prima un file nella sezione **Analisi TS** per vedere i grafici.")

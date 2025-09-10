@@ -244,3 +244,17 @@ def carica_indirizzi():
         
     ]
     return pd.DataFrame(data)
+
+    
+def aggiungi_categorie_device(df, device_mapping):
+    df = df.copy()
+    df["Categoria"] = df["Device"].map(
+        lambda d: device_mapping.get(d, {}).get("Categoria", "NA")
+    )
+    df["Famiglia"] = df["Device"].map(
+        lambda d: device_mapping.get(d, {}).get("Famiglia", "NA")
+    )
+    df["Da sostituzione"] = df["Device"].map(
+        lambda d: device_mapping.get(d, {}).get("Da sostituzione", "NA")
+    )
+    return df
